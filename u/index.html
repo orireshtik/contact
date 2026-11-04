@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Update</title>
+</head>
+<body style="font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 24px 16px">
+<p id="say">Loading…</p>
+<script>
+(() => {
+  // A private tool's front door, with nothing in it: it asks the app below for the page, with the key in this address's #fragment,
+  // which no server ever sees. Without the key the app says only "Not found.". The calls carry no cookies, because Google will not
+  // open an app for a browser signed in to several accounts with the app's owner not first.
+  const url = 'https://script.google.com/macros/s/AKfycbzO3PAOtSPe1yeRxSlRmIvRfHQXydWAZZLdKN4X9P3JKw8dfOm3vRi2SNn0uTlMXkdYMA/exec';
+  const q = new URLSearchParams(location.hash.slice(1));
+  const key = q.get('k');
+  const say = (t) => { document.getElementById('say').textContent = t; };
+  if (!key) return say('Not found.');
+  fetch(url, {method: 'POST', credentials: 'omit', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({action: 'page', key})})
+    .then((r) => r.text())
+    .then((html) => {
+      if (!/<html/i.test(html)) return say(html.slice(0, 200));
+      window.boardApp = {url, key, auto: q.get('auto') === '1'};
+      document.open();
+      document.write(html);
+      document.close();
+    })
+    .catch((e) => say(`Could not reach the app: ${(e && e.message) || e}. Reload this page to try again.`));
+})();
+</script>
+</body>
+</html>
