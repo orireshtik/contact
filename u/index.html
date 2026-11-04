@@ -11,12 +11,17 @@
 <p id="say">Loading…</p>
 <script>
 (() => {
-  // A private tool's front door, with nothing in it: it asks the app below for the page, with the key in this address's #fragment,
-  // which no server ever sees. Without the key the app says only "Not found.". The calls carry no cookies, because Google will not
-  // open an app for a browser signed in to several accounts with the app's owner not first.
+  // A private tool's front door, with nothing in it: it asks the app below for the page, with a key that arrives once in this
+  // address's #fragment, which no server ever sees. The key leaves the address before anything else happens, so a screenshot or a
+  // shared screen does not show it; this tab alone keeps it (sessionStorage), so a reload still works. Without the key the app says
+  // only "Not found.". The calls carry no cookies, because Google will not open an app for a browser signed in to several accounts
+  // with the app's owner not first.
   const url = 'https://script.google.com/macros/s/AKfycbzO3PAOtSPe1yeRxSlRmIvRfHQXydWAZZLdKN4X9P3JKw8dfOm3vRi2SNn0uTlMXkdYMA/exec';
   const q = new URLSearchParams(location.hash.slice(1));
-  const key = q.get('k');
+  if (location.hash) history.replaceState(null, '', location.pathname);
+  const kept = (f) => { try { return f(sessionStorage); } catch (e) { return null; } };
+  const key = q.get('k') || kept((s) => s.getItem('k'));
+  if (q.get('k')) kept((s) => s.setItem('k', key));
   const say = (t) => { document.getElementById('say').textContent = t; };
   if (!key) return say('Not found.');
   fetch(url, {method: 'POST', credentials: 'omit', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({action: 'page', key})})
